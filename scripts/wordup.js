@@ -51,9 +51,12 @@ function endGame() {
  */
 function addNewWordSubmission(word) {
     // Do we already have a wordSubmission with this word?
-    // TODO 21
+    // TODO 21 *DONE*
     // replace the hardcoded 'false' with the real answer
-    var alreadyUsed = false;
+    var duplicateCatch = model.wordSubmissions;
+    var alreadyUsed = duplicateCatch.filter(function(submission) {
+        return submission.word == word
+    });
 
     // if the word is valid and hasn't already been used, add it
     if (containsOnlyAllowedLetters(word) && alreadyUsed == false) {
@@ -73,22 +76,29 @@ function checkIfWordIsReal(word) {
 
     // make an AJAX call to the Pearson API
     $.ajax({
-        // TODO 13 what should the url be?
-        url: "www.todo13.com",
+        // TODO 13 *DONE* what should the url be? 
+        url: "http://api.pearson.com/v2/dictionaries/lasde/entries?headword=" + word,
         success: function(response) {
             console.log("We received a response from Pearson!");
 
             // let's print the response to the console so we can take a looksie
             console.log(response);
 
-            // TODO 14
+            // TODO 14 *DONE*
             // Replace the 'true' below.
             // If the response contains any results, then the word is legitimate.
             // Otherwise, it is not.
-            var theAnswer = true;
+            var theAnswer = false;
+            if(response.results.length > 0) {
+                theAnswer = true;
+            }
 
-            // TODO 15
+            // TODO 15 *DONE*
             // Update the corresponding wordSubmission in the model
+            model.wordSubmissions.forEach(function(submission) {
+                if(submission.word === word) {
+                    submission.isRealWord = theAnswer }
+            });
 
 
             // re-render
@@ -142,8 +152,10 @@ function render() {
     var letterChips = model.allowedLetters.map(letterChip)
     $("#allowed-letters").append(letterChips);
 
-    // TODO 11
+    // TODO 11 *DONE*
     // Render the word submissions
+    var wordChips = model.wordSubmissions.map(wordSubmissionChip)
+    $('#word-submissions').append(wordChips);
 
 
     // Set the value of the textbox
@@ -209,14 +221,24 @@ function wordSubmissionChip(wordSubmission) {
     // if we know the status of this word (real word or not), then add a green score or red X
     if (wordSubmission.hasOwnProperty("isRealWord")) {
         var scoreChip = $("<span></span>").text("⟐");
-        // TODO 17
+        // TODO 17 *DONE*
         // give the scoreChip appropriate text content
+        if (wordSubmission.isRealWord === true) {
+            $(scoreChip).text(wordScore(wordSubmission.word)).addClass("tag tag-sm tag-primary");;
+        }
+        else {
+            $(scoreChip).text("X").addClass("tag tag-sm tag-danger");
+        }
 
-        // TODO 18
+        // TODO 18 *DONE*
         // give the scoreChip appropriate css classes
 
-        // TODO 16
+
+        // TODO 16 *DONE*
         // append scoreChip into wordChip
+        $(wordChip).append(scoreChip);
+
+
 
     }
 
@@ -307,9 +329,13 @@ function disallowedLettersInWord(word) {
  * i.e. the word does not contain any disallowed letters
  */
 function containsOnlyAllowedLetters(word) {
-    // TODO 12
+    // TODO 12 *DONE*
     // Return the actual answer.
-    return true;
+    if (disallowedLettersInWord(word) == "") {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 /**
@@ -337,10 +363,10 @@ function wordScore(word) {
     // split the word into a list of letters
     var letters = word.split("");
 
-    // TODO 19
+    // TODO 19 *DONE*
     // Replace the empty list below.
     // Map the list of letters into a list of scores, one for each letter.
-    var letterScores = [];
+    var letterScores = $.map(letters, letterScore);
 
     // return the total sum of the letter scores
     return letterScores.reduce(add, 0);
@@ -364,7 +390,7 @@ function currentScore() {
 
     // TODO 20
     // return the total sum of the word scores
-    return 0;
+    return wordScores.reduce(add, 0);
 }
 
 
